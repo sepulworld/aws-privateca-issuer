@@ -13,8 +13,10 @@ DOCKER_REGISTRY ?= ghcr.io
 DOCKER_IMAGE_NAME ?= cert-manager/aws-privateca-issuer/controller
 # Image URL to use all building/pushing image targets
 IMG ?= ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:${VERSION}
+
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
-CRD_OPTIONS ?= "crd:trivialVersions=true"
+CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
+export BIN ?= ${CURDIR}/bin
 
 OS := $(shell go env GOOS)
 ARCH := $(shell go env GOARCH)
@@ -114,6 +116,10 @@ ${CONTROLLER_GEN}: | ${BIN}
 kind-cluster: ## Use Kind to create a Kubernetes cluster for E2E tests
 kind-cluster: ${KIND}
 	 ${KIND} get clusters | grep ${K8S_CLUSTER_NAME} || ${KIND} create cluster --name ${K8S_CLUSTER_NAME}
+
+.PHONY: kind-cluster-delete
+kind-cluster-delete:
+	${KIND} delete cluster --name ${K8S_CLUSTER_NAME}
 
 .PHONY: kind-load
 kind-load: ## Load all the Docker images into Kind
